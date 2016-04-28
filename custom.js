@@ -18,10 +18,27 @@
                     value: 0,
                     color: '#05DB5C'
                 }
-            ],
-            callbacks: {
-                //
-            }
+            ]
+        });
+        $('#cool-chart-full-pie-2').kdCoolChart({
+            type: 'full-pie',
+            links: {
+                items: '#cool-chart-full-pie-items-2 [js-cool-chart-data-item]'
+            },
+            datas: [
+                {
+                    value: 0.823,
+                    color: '#4082E8'
+                },
+                {
+                    value: 0.127,
+                    color: '#FFD400'
+                },
+                {
+                    value: 0.05,
+                    color: '#05DB5C'
+                }
+            ]
         });
         $('#cool-chart-half-pie-1').kdCoolChart({
             type: 'half-pie',
