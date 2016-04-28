@@ -1,0 +1,227 @@
+.page {
+    padding: 2rem 0 6rem;
+    width: 80%;
+    margin: 0 auto;
+}
+
+/*****************************************************/
+/**
+** .cool-chart-popup-title **/
+    .cool-chart-popup-title {
+        padding: 10px;
+        background-color: #56646D;
+        color: #fff;
+    }
+/**
+** .cool-chart-popup-body **/
+    .cool-chart-popup-body {
+        padding: 10px;
+    }
+    /**
+    ** while .cool-chart-popup-body is ul **/
+        ul.cool-chart-popup-body {
+            list-style: none;
+        }
+/**
+** .cool-chart-popup **/
+    .cool-chart-popup {
+        width: 175px;
+        background-color: #fff;
+        box-shadow: 0 0 12px rgba(0, 0, 0, .5);
+        position: relative;
+        z-index: 2;
+        /*position: absolute;*/
+        /*margin-left: -87px;*/
+        /*display: none;*/
+        font-size: 12px;
+        transition: left .2s ease-in;
+        transition-property: left, top;
+    }
+    /**
+    ** the arrow of .cool-chart-popup **/
+        .cool-chart-popup:before,
+        .cool-chart-popup:after {
+            content: '';
+            display: block;
+            height: 0;
+            width: 0;
+            border: transparent solid 0;
+            border-top-color: #fff;
+            border-width: 10px 6px 0 6px;
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            margin-left: -6px;
+        }
+        .cool-chart-popup:before {
+            border-top-color: rgba(0, 0, 0, 0.08);
+            border-width: 12px 8px 0 8px;
+            bottom: -12px;
+            margin-left: -8px;
+        }
+/**
+** cool-chart-data-mark **/
+    .cool-chart-data-mark {
+        display: inline-block;
+        height: 12px;
+        width: 12px;
+        font-size: 0;
+        border-radius: 50%;
+        background-color: #333;
+    }
+    /**
+    ** extend .cool-chart-full-pie-data-mark **/
+        .cool-chart-full-pie-data-mark {
+            background-color: transparent;
+        }
+    /**
+    ** extend .cool-chart-line-data-mark **/
+        .cool-chart-line-data-mark {
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            color: #fff;
+            margin-right: 10px;
+            border-radius: 2px;
+            border: 2px solid #333;
+        }
+        .cool-chart-line-data-mark:before {
+            content: '✓';
+            color: #fff;
+            font-size: 12px;
+        }
+    /**
+    ** in .cool-chart-data-item **/
+        .cool-chart-data-item .cool-chart-data-mark {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            margin-top: -6px;
+            -webkit-transition: all 0.3s ease;
+            -moz-transition: all 0.3s ease;
+            -ms-transition: all 0.3s ease;
+            -o-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+        }
+        .cool-chart-data-item.hover .cool-chart-data-mark {
+            width: 16px;
+            height: 16px;
+            margin-top: -8px;
+            left: -2px;
+        }
+    /**
+    ** in .cool-chart-line-data-item **/
+        .cool-chart-line-data-item .cool-chart-data-mark {
+            margin-top: -10px;
+        }
+        .cool-chart-line-data-item.is-hide .cool-chart-data-mark {
+            background-color: transparent;
+        }
+        .cool-chart-line-data-item.is-hide .cool-chart-data-mark:before {
+            display: none;
+        }
+/**
+** .cool-chart-data-item **/
+    .cool-chart-data-item {
+        position: relative;
+        padding-left: 18px;
+        font-size: 12px;
+    }
+    /**
+    ** .cool-chart-line-data-item **/
+        .cool-chart-line-data-item {
+            line-height: 20px;
+            padding-left: 26px;
+            margin-top: 10px;
+        }
+        .cool-chart-data-item:first-child {
+            margin-top: 0;
+        }
+    /**
+    ** in .cool-chart-rect-items **/
+        .cool-chart-rect-items .cool-chart-data-item {
+            display: inline-block;
+            font-size: 12px;
+            margin-right: 50px;
+        }
+        .cool-chart-rect-items .cool-chart-data-item:last-child {
+            margin-right: 0;
+        }
+    /**
+    ** in .cool-chart-popup **/
+        .cool-chart-popup .cool-chart-data-item.is-hide {
+            display: none;
+        }
+/**
+** .cool-chart-items **/
+    .cool-chart-items {
+        list-style: none;
+        padding-left: 0;
+        display: inline-block;
+    }
+    /**
+    ** extend .cool-chart-line **/
+        .cool-chart-line-items {}
+    /**
+    ** extend .cool-chart-rect **/
+        .cool-chart-rect-items {
+            display: block;
+            font-size: 0;
+        }
+/**
+** .cool-chart-svg **/
+    .cool-chart-svg-wrapper {
+        display: inline-block;
+        position: relative;
+        font-size: 0;
+    }
+    .cool-chart-svg {
+        /*background-color: #efefef;*/
+        position: relative;
+        z-index: 1;
+    }
+    /**
+    ** extend .cool-chart-svg-half-pie **/
+        .cool-chart-svg-half-pie {
+            height: 200px !important;
+        }
+/**
+** .cool-chart-text **/
+    .cool-chart-text {
+        width: 100%;
+        height: 100%;
+        font-size: 0;
+        text-align: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .cool-chart-text:before {
+        content: '';
+        height: 100%;
+    }
+    .cool-chart-text:before,
+    .cool-chart-text-inner {
+        display: inline-block;
+        vertical-align: middle;
+    }
+    .cool-chart-text-inner {
+        font-size: 14px;
+    }
+    .cool-chart-text-title {
+        font-size: 12px;
+        color: #859199;
+    }
+    .cool-chart-text-value {
+        /**/
+    }
+    /**
+    ** extend . cool-chart-half-pie-text **/
+        .cool-chart-half-pie-text {
+            top: 15%;
+            height: 85%;
+        }
+        .cool-chart-half-pie-text .cool-chart-text-value {
+            font-size: 32px;
+        }
