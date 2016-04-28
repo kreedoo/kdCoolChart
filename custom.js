@@ -128,6 +128,7 @@
             links: {
                 popup: '#cool-chart-rect-popup-1'
             },
+            whichOneIsLines: [2],
             colors: ['#4082E8', '#FFD400', '#f00'],
             datas: [
                 ['0.56','0.44','0.98'],

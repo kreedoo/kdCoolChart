@@ -1185,6 +1185,14 @@
                 this.snap.text(this.columnsPosition[i] + (this.gridWidth / 2).toNumberic(2), this.canvasSize.height + 5, this.options.horizontalLabels[i]).attr(this.options.style.horizontalLabel);
             }
             
+            this.rects = [];
+            this._drawSubRect(0, 0, this.gridWidth, this.options.datas[0][0] * this.canvasSize.height, {
+                fill: this.options.colors[0],
+                stroke: 0
+            }, 0, function(index, rect){
+                alert(rect);
+            });
+            
             console.log(this);
             return false;
 
@@ -1267,25 +1275,17 @@
                 this.options.horizontalLabels = this.options.horizontalLabels.apply(this.options, arguments);
             }
         },
-        _drawSubRect: function(x, y, width, height, index, color, duration, easing, callback){
+        _drawSubRect: function(x, y, width, height, style, index, subRectIndex, callback){
             var self = this, rect;
-            /*if(this.rects[index] === undefined){*/
-                rect = this.snap.rect(x, (this.canvasSize.height - y), width, 1).attr({
-                    fill: color,
-                    stroke: 0
-                }).data('index', index);
-            /*}else{
-                rect = this.rects[index].attr({
-                    y: this.canvasSize.height,
-                    height: 0
-                });
-            }*/
+            
+            rect = this.snap.rect(x, (this.canvasSize.height - y), width, 1).attr(style).data('index', index).data('subRectIndex', subRectIndex);
+            
             rect.animate({
                 y: this.canvasSize.height - y - height,
                 height: height
-            }, duration, easing, function(){
-                if(callback !== undefined){
-                    callback.apply(self, arguments);
+            }, this.options.drawDuration, this.options.drawEasing, function(){
+                if(checkData.isFunction(callback)){
+                    callback.apply(self, [index, rect]);
                 }
             });
             this.rects.push(rect);
