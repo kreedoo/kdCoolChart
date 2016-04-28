@@ -88,9 +88,7 @@
         init: function(element, options){
             this.element = $(element);
 
-            this._setOptions(options);
-
-            if(this.options.datas === undefined || this.options.datas.length === 0){
+            if(this._setOptions(options) === false){
                 console.log('Warning: Please set this.options.datas!');
                 return false;
             }
@@ -180,7 +178,15 @@
                 },
             }, options);
             
-            // datas
+            if(this.options.datas === undefined || this.options.datas.length === 0){
+                return false;
+            }
+            
+            for(var i = 0; i < this.options.datas.length; i++){
+                if(checkData.isFunction(this.options.datas[i].value)){
+                    this.options.datas[i].value = this.options.datas[i].value.apply(this.options, arguments);
+                }
+            }
 
             if(checkData.isFunction(this.options.size)){
                 this.options.size = this.options.size.apply(this.options, arguments);
@@ -675,6 +681,10 @@
                     afterUpdate: function(){}
                 }
             }, options);
+            
+            if(this.options.datas === undefined || this.options.datas.length === 0){
+                return false;
+            }
 
             for(var i = 0; i < this.options.datas.length; i++){
                 if(checkData.isFunction(this.options.datas[i].value)){
@@ -1174,10 +1184,10 @@
                 height: this.options.size.height - this.options.padding.top - this.options.padding.bottom
             };
 
-            this.gridWidth = (this.canvasSize.width - (this.options.datas.length - 1) * this.options.gapBetweenRects) / this.options.datas.length;
+            this.gridWidth = (this.canvasSize.width - (this.options.datas[0].value.length - 1) * this.options.gapBetweenRects) / this.options.datas[0].value.length;
             this.columnsPosition = [];
             var i;
-            for(i = 0; i < this.options.datas.length; i++){
+            for(i = 0; i < this.options.datas[0].value.length; i++){
                 this.columnsPosition[i] = (i * (this.options.gapBetweenRects + this.gridWidth)).toNumberic(2);
             }
 
@@ -1186,12 +1196,8 @@
             }
             
             this.rects = [];
-            this._drawSubRect(0, 0, this.gridWidth, this.options.datas[0][0] * this.canvasSize.height, {
-                fill: this.options.colors[0],
-                stroke: 0
-            }, 0, function(index, rect){
-                alert(rect);
-            });
+
+            this.drawRect(1);
             
             console.log(this);
             return false;
@@ -1258,9 +1264,15 @@
                     mouseover: function(){}
                 }
             }, options);
+            
+            if(this.options.datas === undefined || this.options.datas.length === 0){
+                return false;
+            }
 
-            if(checkData.isFunction(this.options.colors)){
-                this.options.colors = this.options.colors.apply(this.options, arguments);
+            for(var i = 0; i < this.options.datas.length; i++){
+                if(checkData.isFunction(this.options.datas[i].value)){
+                    this.options.datas[i].value = this.options.datas[i].value.apply(this.options, arguments);
+                }
             }
 
             if(checkData.isFunction(this.options.datas)){
@@ -1285,7 +1297,7 @@
                 height: height
             }, this.options.drawDuration, this.options.drawEasing, function(){
                 if(checkData.isFunction(callback)){
-                    callback.apply(self, [index, rect]);
+                    callback.apply(self, [index, subRectIndex, rect]);
                 }
             });
             this.rects.push(rect);
@@ -1307,17 +1319,23 @@
                     self.closePopup();
                 });
         },
-        drawRect: function(index){
-            var self = this, datas = [], i, height = 0;
-
+        _getRectsDatas: function(index){
+            var datas = [], i;
             for(i = 0; i < this.options.datas.length; i++){
                 datas[i] = {
                     value: this.options.datas[i].value[index],
                     color: this.options.datas[i].color
                 };
             }
+            return datas;
+        },
+        drawRect_: function(index, callback){
+            var self = this, height = 0;
 
-            function draw(subRectIndex){
+            datas = this._getRectsDatas(index);
+
+
+            /*function draw(subRectIndex){
                 if(subRectIndex === self.options.datas.length || datas[subRectIndex] === undefined) return false;
                 var x = self.columnsPosition[index],
                     y = height,
@@ -1342,7 +1360,37 @@
                         draw(++subRectIndex);
                     });
             }
-            draw(0);
+            draw(0);*/
+        },
+        drawRect: function(index, subRectIndex, datas, basicHeight, callback){
+            if(index === undefined) index = 0;
+            if(subRectIndex === undefined){
+                // start drawing
+                subRectIndex = 0;
+            }
+            if(datas === undefined) datas = this._getRectsDatas(index);
+            if(subRectIndex === datas.length){
+                // finish drawing
+                return false;
+            }
+            console.log(datas);
+            if(basicHeight === undefined) basicHeight = 0;
+
+            var self = this;
+
+            this._drawSubRect(
+                this.columnsPosition[index],
+                basicHeight,
+                this.gridWidth,
+                this.options.datas[index].value[subRectIndex] * this.canvasSize.height,
+                {
+                    fill: this.options.datas[index].color,
+                    stroke: 0
+                }, index, subRectIndex, function(index, subRectIndex, rect){
+                    basicHeight += (datas[subRectIndex].value * self.canvasSize.height).toNumberic(2) + this.options.gapBetweenSubRects;
+
+                    self.drawRect(index, subRectIndex + 1, datas, basicHeight, callback);
+                });
         },
         drawLine: function(callback){
             var self = this, i, line, m = 0, tempLine = '', pathLength, x, y;
