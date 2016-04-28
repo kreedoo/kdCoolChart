@@ -146,7 +146,7 @@
                 var labels = [], i;
 
                 for(i = 1; i <= this.datas.length; i++){
-                    labels[i] = i;
+                    labels[i - 1] = i;
                 }
 
                 return labels;
