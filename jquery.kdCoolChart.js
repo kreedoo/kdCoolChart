@@ -543,7 +543,7 @@
                 vertical: (this.svgCanvasSize.height / (this.options.verticalValueMax / this.options.verticalValueUnit)).toNumberic(2)
             };
 
-            this._setMarksBackground();
+            this._setMarksColor();
 
             this._setDataLinesPoints();
 
@@ -704,7 +704,7 @@
                 this.options.verticalLabels = this.options.verticalLabels.apply(this.options, arguments);
             }
         },
-        _setMarksBackground: function(){
+        _setMarksColor: function(){
             var self = this, index, items = $();
 
             if(this.items !== undefined){
@@ -1184,28 +1184,25 @@
                 height: this.options.size.height - this.options.padding.top - this.options.padding.bottom
             };
 
-            this.gridWidth = (this.canvasSize.width - (this.options.datas[0].value.length - 1) * this.options.gapBetweenRects) / this.options.datas[0].value.length;
+            this.gridWidth = ((this.canvasSize.width - (this.options.datas[0].value.length - 1) * this.options.gapBetweenRects) / this.options.datas[0].value.length).toNumberic(2);
             this.columnsPosition = [];
             var i;
             for(i = 0; i < this.options.datas[0].value.length; i++){
                 this.columnsPosition[i] = (i * (this.options.gapBetweenRects + this.gridWidth)).toNumberic(2);
             }
 
-            for(i = 0; i < this.columnsPosition.length; i++){
-                this.snap.text(this.columnsPosition[i] + (this.gridWidth / 2).toNumberic(2), this.canvasSize.height + 5, this.options.horizontalLabels[i]).attr(this.options.style.horizontalLabel);
-            }
-            
-            this.rects = [];
+            this._setMarksColor();
 
-            this.drawRect(1);
+            this._drawHorizontalLabels();
             
-            console.log(this);
-            return false;
-
-            this.rects = [];
-            for(i = 0; i < this.columnsPosition.length; i++){
-                this.drawRect(i);
-            }
+            this._drawAllRects();
+            
+            this._drawLine();
+            
+            this.showRects();
+            this.showLine();
+            
+            this._triggerFunction();
         },
         _setOptions: function(options){
             this.options = $.extend(true, {
@@ -1225,7 +1222,22 @@
                     bottom: 20,
                     left: 0
                 },
-                gapBetweenRects: 16,
+                gapBetweenRects: function(){
+                    var len = this.datas[0].value.length;
+                    if(len > 20 && len <= 35){
+                        return 8;
+                    }else if(len > 10 && len <= 20){
+                        return 12;
+                    }else if(len > 5 && len <= 10){
+                        return 16;
+                    }else if(len > 3 && len <= 5){
+                        return 50;
+                    }else if(len > 1 && len <= 3){
+                        return 100;
+                    }else{
+                        return 16;
+                    }
+                },
                 gapBetweenSubRects: 2,
                 
                 horizontalAllLabels: [], // [] or function(){}
@@ -1235,9 +1247,14 @@
                     horizontalLabel: {
                         'fill': '#56646D',
                         'font-family': 'Arial',
-                        'font-size': '14px',
+                        'font-size': '12px',
                         'text-anchor': 'middle',
                         'dominant-baseline': 'text-before-edge'
+                    },
+                    rect: {
+                        fill: '#000',
+                        stroke: 'none',
+                        strokeWidth: 0
                     },
                     defaultDataLine: {
                         'fill': 'none',
@@ -1286,160 +1303,246 @@
             if(checkData.isFunction(this.options.horizontalLabels)){
                 this.options.horizontalLabels = this.options.horizontalLabels.apply(this.options, arguments);
             }
+
+            if(checkData.isFunction(this.options.gapBetweenRects)){
+                this.options.gapBetweenRects = this.options.gapBetweenRects.apply(this.options, arguments);
+            }
         },
-        _drawSubRect: function(x, y, width, height, style, index, subRectIndex, callback){
-            var self = this, rect;
+        _setMarksColor: function(){
+            var self = this, index, items = $();
+
+            if(this.items !== undefined){
+                items = this.items;
+                items.each(function(){
+                    index = $(this).data(self.options.dataIndexName);
+                    $(this).find(self.options.links.mark).css({
+                        'border-color': index >= self.options.datas.length ? self.options.lineData.color : self.options.datas[index].color
+                    });
+                });
+            }
+            if(this.items !== undefined && this.popupItems !== undefined){
+                items = items.add(this.popupItems);
+                items.each(function(){
+                    index = $(this).data(self.options.dataIndexName);
+                    $(this).find(self.options.links.mark).css({
+                        'background-color': index >= self.options.datas.length ? self.options.lineData.color : self.options.datas[index].color
+                    });
+                });
+            }
+        },
+        _drawHorizontalLabels: function(){
+            var g = this.snap.paper.g().attr({class: 'cool-chart-x-label'}), xl, i, label;
+            console.log(this.options.horizontalLabels);
+            for(i = 0; i < this.options.horizontalLabels.length; i++){
+                label = this.options.horizontalLabels[i];
+                xl = this.snap.text(this.columnsPosition[label.index] + (this.gridWidth / 2).toNumberic(2), this.canvasSize.height + 5, label.label).attr(this.options.style.horizontalLabel);
+                g.add(xl);
+            }
+        },        
+        _drawAllRects: function(){
+            var i, m, datas, g;
             
-            rect = this.snap.rect(x, (this.canvasSize.height - y), width, 1).attr(style).data('index', index).data('subRectIndex', subRectIndex);
+            this.rects = [];
             
-            rect.animate({
-                y: this.canvasSize.height - y - height,
-                height: height
-            }, this.options.drawDuration, this.options.drawEasing, function(){
-                if(checkData.isFunction(callback)){
-                    callback.apply(self, [index, subRectIndex, rect]);
+            for(i = 0; i < this.options.datas[0].value.length; i++){
+                datas = this._getRectsDatas(i);
+                this.rects[i] = [];
+                g = this.snap.paper.g().attr({class: 'cool-chart-rect-group cool-chart-rect-group-' + i}).data('index', i);
+                for(m = 0; m < datas.length; m++){
+                    this.rects[i][m] = this.snap.rect(datas[m].x, (this.canvasSize.height - datas[m].y), datas[m].width, 0).attr(this.options.style.rect).attr({
+                        class: 'cool-chart-rect cool-chart-rect-' + i + '-' + m,
+                        fill: datas[m].color
+                    }).data('index', i).data('subRectIndex', m);
+                    
+                    g.add(this.rects[i][m]);
                 }
-            });
-            this.rects.push(rect);
-        },
-        _triggerFunction: function(){
-            var self = this, index, i, point;
-
-            for(i = 0; i < this.rects.length; i++){
-                this.rects[i]
-                    .unmouseover()
-                    .mouseover(function(){
-                        index = this.data('index');
-                        self.openPopup(index);
-                    });
             }
-            this.element
-                .off('mouseleave' + this.eventNamespace)
-                .on('mouseleave' + this.eventNamespace, function(){
-                    self.closePopup();
-                });
         },
-        _getRectsDatas: function(index){
-            var datas = [], i;
-            for(i = 0; i < this.options.datas.length; i++){
-                datas[i] = {
-                    value: this.options.datas[i].value[index],
-                    color: this.options.datas[i].color
-                };
-            }
-            return datas;
-        },
-        drawRect_: function(index, callback){
-            var self = this, height = 0;
-
-            datas = this._getRectsDatas(index);
-
-
-            /*function draw(subRectIndex){
-                if(subRectIndex === self.options.datas.length || datas[subRectIndex] === undefined) return false;
-                var x = self.columnsPosition[index],
-                    y = height,
-                    w = self.gridWidth,
-                    h = (self.canvasSize.height * datas[subRectIndex].value).toFixed(2) * 1 - (subRectIndex === 0 ? 0 : self.options.gapBetweenSubRects);
-                h = h < 0 ? 0 : h;
-
-                self._drawSubRect(
-                    x,
-                    y,
-                    w,
-                    h,
-                    index,
-                    datas[subRectIndex].color,
-                    self.options.drawDuration * datas[subRectIndex].value,
-                    self.options.drawEasing,
-                    function(){
-                        height += (datas[subRectIndex].value * self.canvasSize.height).toFixed(2) * 1 + self.options.gapBetweenSubRects;
-                        if(index === self.columnsPosition.length - 1 && subRectIndex === self.options.datas.length - 1){
-                            self.drawLine();
-                        }
-                        draw(++subRectIndex);
-                    });
-            }
-            draw(0);*/
-        },
-        drawRect: function(index, subRectIndex, datas, basicHeight, callback){
-            if(index === undefined) index = 0;
-            if(subRectIndex === undefined){
-                // start drawing
-                subRectIndex = 0;
-            }
-            if(datas === undefined) datas = this._getRectsDatas(index);
-            if(subRectIndex === datas.length){
-                // finish drawing
-                return false;
-            }
-            console.log(datas);
-            if(basicHeight === undefined) basicHeight = 0;
-
-            var self = this;
-
-            this._drawSubRect(
-                this.columnsPosition[index],
-                basicHeight,
-                this.gridWidth,
-                this.options.datas[index].value[subRectIndex] * this.canvasSize.height,
-                {
-                    fill: this.options.datas[index].color,
-                    stroke: 0
-                }, index, subRectIndex, function(index, subRectIndex, rect){
-                    basicHeight += (datas[subRectIndex].value * self.canvasSize.height).toNumberic(2) + this.options.gapBetweenSubRects;
-
-                    self.drawRect(index, subRectIndex + 1, datas, basicHeight, callback);
-                });
-        },
-        drawLine: function(callback){
-            var self = this, i, line, m = 0, tempLine = '', pathLength, x, y;
+        _drawLine: function(){
+            var i, line, m = 0, tempLine = '', pathLength, x, y;
+            
             this.balanceLinePoints = [];
-            for(i = 0; i < self.options.balanceLine.length; i++){
-                x = Math.ceil(self.columnsPosition[i] + self.gridWidth / 2);
-                this.balanceLinePoints.push(x);
-                if(i > 0 && i < self.options.balanceLine.length - 1){
+            
+            for(i = 0; i < this.options.lineData.value.length; i++){
+                x = Math.ceil(this.columnsPosition[i] + this.gridWidth / 2);
+                
+                this.balanceLinePoints[i] = x;
+                
+                if(i > 0 && i < this.options.lineData.value.length - 1){
                     continue;
                 }
-                y = Math.ceil(self.canvasSize.height - self.options.balanceLine[i] * self.canvasSize.height);
+                
+                y = Math.ceil(this.canvasSize.height - this.options.lineData.value[i] * this.canvasSize.height);
                 if(i === 0){
                     tempLine = svgPathMethods.point(x - 5, y + 5, tempLine);
                 }else{
                     tempLine = svgPathMethods.point(x + 5, y - 5, tempLine, x * 0.65, y * 0.1);
                 }
             }
+            
             if(this.balanceLine !== undefined){
                 line = this.balanceLine.attr({
                     d: tempLine
                 });
             }else{
                 line = this.snap.path(tempLine).attr(this.options.style.defaultDataLine).attr({
+                    class: 'cool-chart-line',
                     'stroke': '#FF5969'
                 });
             }
+            
             pathLength = svgPathMethods.pathLength(line);
             line.attr({
                 'strokeDashoffset': pathLength,
                 'strokeDasharray': pathLength
-            }).animate({
-                'strokeDashoffset': 0
-            }, 500, mina.linear);
+            });
 
             this.balanceLine = line;
-
+            
             this.pointCircle = this.snap.circle(0,0,4).attr(this.options.style.pointCircle).attr({
                 'opacity': 0
             });
-
             this.hoverLine = this.snap.path(svgPathMethods.points([[0,0],[0,this.canvasSize.height]])).attr({
                 'fill': 'none',
                 'stroke': 'none',
                 'strokeWidth': 1
             });
+        },
+        _triggerFunction: function(){
+            var self = this, index, i, m, point;
 
-            this._triggerFunction();
+            for(i = 0; i < this.rects.length; i++){
+                for(m = 0; m < this.rects[i].length; m++){
+                    this.rects[i][m]
+                        .unmouseout()
+                        .mouseover(function(){
+                            if(self.isDrawing) return false;
+
+                            index = this.data('index');
+                            self.openPopup(index);
+                        });
+                }
+            }
+            this.element
+                .off('mouseout' + this.eventNamespace)
+                .on('mouseout' + this.eventNamespace, function(){
+                    self.closePopup();
+                });
+        },
+        _getRectsDatas: function(index){
+            var datas = [], i, basicHeight = 0, height = 0;
+            for(i = 0; i < this.options.datas.length; i++){
+                height = (this.options.datas[i].value[index] * this.canvasSize.height).toNumberic(2) + this.options.gapBetweenSubRects;
+                datas[i] = {
+                    value: this.options.datas[i].value[index],
+                    color: this.options.datas[i].color,
+                    height: height,
+                    width: this.gridWidth,
+                    x: this.columnsPosition[index],
+                    y: basicHeight
+                };
+                basicHeight += height + this.options.gapBetweenSubRects;
+            }
+            return datas;
+        },
+        
+        showRect: function(index, subRectIndex, datas, callback){
+            if(subRectIndex === undefined){
+                subRectIndex = 0;
+            }
+            if(datas === undefined){
+                datas = this._getRectsDatas(index);
+            }
+            if(subRectIndex === datas.length){
+                return false;
+            }
+
+            this.isDrawing = true;
+            
+            var self = this;
+            
+            this.rects[index][subRectIndex].animate({
+                y: this.canvasSize.height - datas[subRectIndex].y - datas[subRectIndex].height,
+                height: datas[subRectIndex].height
+            }, this.options.drawDuration * datas[subRectIndex].value, this.options.drawEasing, function(){
+                self.isDrawing = false;
+
+                if(checkData.isFunction(callback)){
+                    callback.apply(self, arguments);
+                }
+                self.showRect(index, subRectIndex + 1, datas, callback);
+            });
+        },
+        hideRect: function(index, subRectIndex, datas, callback){
+            if(subRectIndex === undefined){
+                subRectIndex = 0;
+            }
+            if(datas === undefined){
+                datas = this._getRectsDatas(index);
+            }
+            if(subRectIndex === datas.length){
+                return false;
+            }
+            
+            var self = this;
+            
+            this.rects[index][subRectIndex].attr({
+                y: this.canvasSize.height - datas[subRectIndex].y,
+                height: 0
+            });
+            
+            if(checkData.isFunction(callback)){
+                callback.apply(this, arguments);
+            }
+            this.hideRect(index, subRectIndex + 1, datas, callback);
+        },
+        showRects: function(){
+            var i;
+            
+            for(i = 0; i < this.options.datas[0].value.length; i++){
+                this.showRect(i);
+            }
+        },
+        hideRects: function(){
+            var i;
+            
+            for(i = 0; i < this.options.datas[0].value.length; i++){
+                this.hideRect(i);
+            }
+        },
+        showLine: function(callback){
+            var self = this;
+
+            this.isDrawing = true;
+            
+            this.balanceLine.animate({
+                'strokeDashoffset': 0
+            }, 500, mina.linear, function(){
+
+                self.isDrawing = false;
+
+                if(checkData.isFunction(callback)){
+                    callback.apply(self, arguments);
+                }
+            });
+        },
+        hideLine: function(callback){
+            var pathLength;
+            
+            pathLength = svgPathMethods.pathLength(this.balanceLine);
+            
+            this.balanceLine.attr({
+                'strokeDasharray': pathLength,
+                'strokeDashoffset': pathLength
+            });
+            
+            if(checkData.isFunction(callback)){
+                callback.apply(this, arguments);
+            }
         },
         openPopup: function(index){
+            if(this.popup === undefined) return false;
+
             var point;
 
             this.hoverLine.attr({
@@ -1464,6 +1567,8 @@
                 });
         },
         closePopup: function(){
+            if(this.popup === undefined) return false;
+
             this.popup
                 .hide()
                 .removeStyleCss('left')

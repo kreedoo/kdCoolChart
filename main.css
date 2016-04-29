@@ -34,8 +34,8 @@
         /*margin-left: -87px;*/
         /*display: none;*/
         font-size: 12px;
-        transition: left .2s ease-in;
-        transition-property: left, top;
+        transition: all .2s ease-in;
+        /*transition-property: left, top;*/
     }
     /**
     ** the arrow of .cool-chart-popup **/
