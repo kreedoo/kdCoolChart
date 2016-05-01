@@ -1199,8 +1199,9 @@
             
             this._drawLine();
             
-            this.showRects();
-            this.showLine();
+            this.showRects(function(){
+                this.showLine();
+            });
             
             this._triggerFunction();
         },
@@ -1222,6 +1223,7 @@
                     bottom: 20,
                     left: 0
                 },
+                hiddenStatusClassName: 'is-hide',
                 gapBetweenRects: function(){
                     var len = this.datas[0].value.length;
                     if(len > 20 && len <= 35){
@@ -1270,10 +1272,10 @@
                 callbacks: {
                     init: function(){},
                     destroy: function(){},
-                    beforeOpenPopup: function(){},
-                    afterOpenPopup: function(){},
-                    beforeClosePopup: function(){},
-                    afterClosePopup: function(){},
+                    beforeOpenPopup: function(index, popup){},
+                    afterOpenPopup: function(index, popup){},
+                    beforeClosePopup: function(index, popup){},
+                    afterClosePopup: function(index, popup){},
                     beforeDrawSubRect: function(){},
                     afterDrawSubRect: function(){},
                     beforeDrawRect: function(){},
@@ -1332,7 +1334,7 @@
         },
         _drawHorizontalLabels: function(){
             var g = this.snap.paper.g().attr({class: 'cool-chart-x-label'}), xl, i, label;
-            console.log(this.options.horizontalLabels);
+            
             for(i = 0; i < this.options.horizontalLabels.length; i++){
                 label = this.options.horizontalLabels[i];
                 xl = this.snap.text(this.columnsPosition[label.index] + (this.gridWidth / 2).toNumberic(2), this.canvasSize.height + 5, label.label).attr(this.options.style.horizontalLabel);
@@ -1428,6 +1430,27 @@
                 .on('mouseout' + this.eventNamespace, function(){
                     self.closePopup();
                 });
+            this.items
+                .off('click' + this.eventNamespace)
+                .on('click' + this.eventNamespace, function(){
+                    index = $(this).data(self.options.dataIndexName);
+
+                    if($(this).hasClass(self.options.hiddenStatusClassName)){
+                        $(this).removeClass(self.options.hiddenStatusClassName);
+                        if(index >= self.options.datas.length){
+                            self.showLine();
+                        }else{
+                            self.showSubRects(index);
+                        }
+                    }else{
+                        $(this).addClass(self.options.hiddenStatusClassName);
+                        if(index >= self.options.datas.length){
+                            self.hideLine();
+                        }else{
+                            self.hideSubRects(index);
+                        }
+                    }
+                });
         },
         _getRectsDatas: function(index){
             var datas = [], i, basicHeight = 0, height = 0;
@@ -1446,9 +1469,10 @@
             return datas;
         },
         
-        showRect: function(index, subRectIndex, datas, callback){
-            if(subRectIndex === undefined){
-                subRectIndex = 0;
+        showSubRect: function(index, subRectIndex, datas, callback, isLast){
+            if(index === undefined || subRectIndex === undefined){
+                console.log('Warning: Please define argument "index" and "subRectIndex"!');
+                return false;
             }
             if(datas === undefined){
                 datas = this._getRectsDatas(index);
@@ -1460,7 +1484,7 @@
             this.isDrawing = true;
             
             var self = this;
-            
+
             this.rects[index][subRectIndex].animate({
                 y: this.canvasSize.height - datas[subRectIndex].y - datas[subRectIndex].height,
                 height: datas[subRectIndex].height
@@ -1468,14 +1492,66 @@
                 self.isDrawing = false;
 
                 if(checkData.isFunction(callback)){
-                    callback.apply(self, arguments);
+                    callback.apply(self, isLast ? [subRectIndex, self.options.datas[0].value.length] : [index, subRectIndex, datas]);
                 }
-                self.showRect(index, subRectIndex + 1, datas, callback);
             });
         },
-        hideRect: function(index, subRectIndex, datas, callback){
+        showRect: function(index, subRectIndex, datas, callback, isLast){
+            if(index === undefined){
+                console.log('Warning: Please define argument "index"!');
+                return false;
+            }
             if(subRectIndex === undefined){
                 subRectIndex = 0;
+            }
+            if(datas === undefined){
+                datas = this._getRectsDatas(index);
+            }
+            if(subRectIndex === datas.length){
+                if(checkData.isFunction(callback)){
+                    callback.apply(this, isLast ? [this.options.datas[0].value.length] : [index, datas]);
+                }
+                return false;
+            }
+
+            var self = this;
+
+            this.showSubRect(index, subRectIndex, datas, function(index, subRectIndex, datas){
+                this.showRect(index, subRectIndex + 1, datas, callback, isLast);
+            });
+        },
+        showRects: function(callback){
+            var i;
+            
+            for(i = 0; i < this.options.datas[0].value.length; i++){
+                if(i === this.options.datas[0].value.length - 1){
+                    this.showRect(i, undefined, undefined, callback, true);
+                }else{
+                    this.showRect(i);
+                }
+            }
+        },
+        showSubRects: function(index, callback){
+            if(index === undefined){
+                console.log('Warning: Please define argument "index"!');
+                return false;
+            }
+
+            var i;
+
+            for(i = 0; i < this.options.datas[0].value.length; i++){
+                if(i === this.options.datas[0].value.length - 1){
+                    this.showSubRect(i, index, undefined, callback, true);
+                }else{
+                    this.showSubRect(i, index);
+                }
+            }
+        },
+
+        hideSubRect: function(index, subRectIndex, datas, callback, isLast){
+            if(index === undefined || subRectIndex === undefined){
+                console.log('Warning: Please define argument "index" and "subRectIndex"!');
+                return false;
             }
             if(datas === undefined){
                 datas = this._getRectsDatas(index);
@@ -1484,32 +1560,67 @@
                 return false;
             }
             
-            var self = this;
-            
             this.rects[index][subRectIndex].attr({
                 y: this.canvasSize.height - datas[subRectIndex].y,
                 height: 0
             });
             
             if(checkData.isFunction(callback)){
-                callback.apply(this, arguments);
+                callback.apply(this, isLast ? [subRectIndex, self.options.datas[0].value.length] : [index, subRectIndex, datas]);
             }
-            this.hideRect(index, subRectIndex + 1, datas, callback);
         },
-        showRects: function(){
+        hideRect: function(index, subRectIndex, datas, callback, isLast){
+            if(index === undefined){
+                console.log('Warning: Please define argument "index"!');
+                return false;
+            }
+            if(subRectIndex === undefined){
+                subRectIndex = 0;
+            }
+            if(datas === undefined){
+                datas = this._getRectsDatas(index);
+            }
+            if(subRectIndex === datas.length){
+                if(checkData.isFunction(callback)){
+                    callback.apply(this, isLast ? [this.options.datas[0].value.length] : [index, datas]);
+                }
+                return false;
+            }
+            
+            var self = this;
+
+            this.hideSubRect(index, subRectIndex, datas, function(index, subRectIndex, datas){
+                this.hideRect(index, subRectIndex + 1, datas, callback, isLast);
+            });
+        },
+        hideRects: function(callback){
             var i;
             
             for(i = 0; i < this.options.datas[0].value.length; i++){
-                this.showRect(i);
+                if(i === this.options.datas[0].value.length - 1){
+                    this.hideRect(i, undefined, undefined, callback, true);
+                }else{
+                    this.hideRect(i);
+                }
             }
         },
-        hideRects: function(){
+        hideSubRects: function(index, callback){
+            if(index === undefined){
+                console.log('Warning: Please define argument "index"!');
+                return false;
+            }
+
             var i;
-            
+
             for(i = 0; i < this.options.datas[0].value.length; i++){
-                this.hideRect(i);
+                if(i === this.options.datas[0].value.length - 1){
+                    this.hideSubRect(i, index, undefined, callback, true);
+                }else{
+                    this.hideSubRect(i, index);
+                }
             }
         },
+
         showLine: function(callback){
             var self = this;
 
@@ -1574,6 +1685,9 @@
                 .removeStyleCss('left')
                 .removeStyleCss('top')
                 .removeStyleCss('position');
+            this.pointCircle.attr({
+                'opacity': 0
+            });
         },
         update: function(){},
         destroy: function($super){
