@@ -750,7 +750,13 @@
             }
         },
         _drawLabels: function(){
-            var i, point = {}, HL = this.options.horizontalLabels, index;
+            var i, point = {}, HL = this.options.horizontalLabels, index,
+                g1 = this.snap.paper.g().attr({
+                    'class': 'cool-chart-horizontal-labels'
+                }),
+                g2 = this.snap.paper.g().attr({
+                    'class': 'cool-chart-vertical-labels'
+                });
 
             this.svgLabels = {
                 horizontal: [],
@@ -770,6 +776,7 @@
                 if(i === HL.length - 1){
                     this.svgLabels.horizontal[i].attr(this.options.style.horizontalLastLabel);
                 }
+                g1.add(this.svgLabels.horizontal[i]);
             }
 
             // vertical labels
@@ -778,10 +785,12 @@
                 point.y = this.options.size.height - this.gridSize.vertical * (this.options.verticalLabels[i] / this.options.verticalValueUnit) - this.options.padding.bottom;
                 
                 this.svgLabels.vertical[i] = this.snap.text(point.x - 5, point.y, this.options.verticalLabels[i]).attr(this.options.style.verticalLabel);
+
+                g2.add(this.svgLabels.vertical[i]);
             }
         },
         _drawGrid: function(){
-            var i, point = {}, path;
+            var i, point = {}, path, g1, g2;
 
             this.svgGridLines = {
                 horizontal: [],
@@ -790,6 +799,9 @@
 
             // horizontal grid lines
             if(this.options.showHorizontalGrid){
+                g1 = this.snap.paper.g().attr({
+                    'class': 'cool-chart-horizontal-grid'
+                });
                 point.x = this.options.padding.left;
                 for(i = 0; i < (this.options.verticalValueMax / this.options.verticalValueUnit + 1); i++){
                     point.y = this.options.size.height - this.gridSize.vertical * i - this.options.padding.bottom;
@@ -802,11 +814,15 @@
                     if(i === 0){
                         this.svgGridLines.horizontal[i].attr(this.options.style.firstGridLine);
                     }
+                    g1.add(this.svgGridLines.horizontal[i]);
                 }
             }
 
             // vertical grid lines
             if(this.options.showVerticalGrid){
+                g2 = this.snap.paper.g().attr({
+                    'class': 'cool-chart-vertical-grid'
+                });
                 point.y = this.options.padding.top;
                 for(i = 0; i < (this.options.horizontalValueMax / this.options.horizontalValueUnit); i++){
                     point.x = this.options.padding.left + this.gridSize.horizontal * i;
@@ -816,6 +832,7 @@
                         [point.x, this.options.size.height - this.options.padding.bottom]
                     ]);
                     this.svgGridLines.vertical[i] = this.snap.path(path).attr(this.options.style.gridLine);
+                    g1.add(this.svgGridLines.vertical[i]);
                 }
             }
         },
