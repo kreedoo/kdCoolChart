@@ -394,7 +394,7 @@
 
             this.isDrawing = true;
 
-            if(this.options.callbacks.beforeShowArc.apply(this, [index, arc, this.options.datas[index]]) === false){
+            if(this.options.callbacks.beforeShowArc.apply(this, [index, arc, this.options.datas[index]]) !== true){
                 return false;
             }
 
@@ -428,7 +428,7 @@
         },
         showArcs: function(index, callback){
             if(index === undefined){
-                if(this.options.callbacks.beforeShowArcs.apply(this, arguments) === false) return false;
+                if(this.options.callbacks.beforeShowArcs.apply(this, arguments) !== true) return false;
                 index = 0;
             }
             if(index === this.options.datas.length){
@@ -451,7 +451,7 @@
                 pathLength = this._getPathLength(this.arcs[index]),
                 arc = this.arcs[index];
 
-            if(this.options.callbacks.beforeHideArc.apply(this, [index, arc, this.options.datas[index]]) === false){
+            if(this.options.callbacks.beforeHideArc.apply(this, [index, arc, this.options.datas[index]]) !== true){
                 return false;
             }
 
@@ -468,7 +468,7 @@
         },
         hideArcs: function(index, callback){
             if(index === undefined){
-                if(this.options.callbacks.beforeHideArcs.apply(this, arguments) === false) return false;
+                if(this.options.callbacks.beforeHideArcs.apply(this, arguments) !== true) return false;
                 index = 0;
             }
             if(index === this.options.datas.length){
@@ -631,7 +631,7 @@
                     init: function(){},
                     destroy: function(){},
                     mousemove: function(index){},
-                    beforeOpenPopup: function(popup, index){
+                    beforeOpenPopup: function(index, popup){
                         /**
                         ** popup = this.popup
                         ** index = this.popup.data(this.options.lineIndexDataName)
@@ -648,12 +648,12 @@
                         // need to return true, if return false, program will stop
                         return true;
                     },
-                    afterOpenPopup: function(popup, index){},
-                    beforeClosePopup: function(popup, index){
+                    afterOpenPopup: function(index, popup){},
+                    beforeClosePopup: function(index, popup){
                         // need to return true, if return false, program will stop
                         return true;
                     },
-                    afterClosePopup: function(popup, index){},
+                    afterClosePopup: function(index, popup){},
                     beforeHideDataLine: function(index, line, data){
                         // need to return true, if return false, program will stop
                         return true;
@@ -879,7 +879,7 @@
                     var index = $(this).data(self.options.dataIndexName);
 
                     if($(this).hasClass(self.options.hiddenStatusClassName)){
-                        if(self.options.callbacks.beforeShowDataLine.apply(self, [index]) === false) return false;
+                        if(self.options.callbacks.beforeShowDataLine.apply(self, [index]) !== true) return false;
 
                         $(this).removeClass(self.options.hiddenStatusClassName);
 
@@ -892,7 +892,7 @@
 
                         self.options.callbacks.afterShowDataLine.apply(self, [index]);
                     }else{
-                        if(self.options.callbacks.beforeHideDataLine.apply(self, [index]) === false) return false;
+                        if(self.options.callbacks.beforeHideDataLine.apply(self, [index]) !== true) return false;
 
                         $(this).addClass(self.options.hiddenStatusClassName);
 
@@ -952,7 +952,7 @@
 
             this.isDrawing = true;
 
-            if(this.options.callbacks.beforeShowDataLine.apply(this, [index, line, this.options.datas[index]]) === false){
+            if(this.options.callbacks.beforeShowDataLine.apply(this, [index, line, this.options.datas[index]]) !== true){
                 return false;
             }
 
@@ -970,7 +970,7 @@
         },
         showDataLines: function(index, callback){
             if(index === undefined){
-                if(this.options.callbacks.beforeShowDataLines.apply(this, arguments) === false) return false;
+                if(this.options.callbacks.beforeShowDataLines.apply(this, arguments) !== true) return false;
                 index = 0;
             }
             if(index >= this.options.datas.length){
@@ -991,7 +991,7 @@
             var line = this.svgDataLines[index],
                 pathLength;
 
-            if(this.options.callbacks.beforeHideDataLine.apply(this, [index, line, this.options.datas[index]]) === false){
+            if(this.options.callbacks.beforeHideDataLine.apply(this, [index, line, this.options.datas[index]]) !== true){
                 return false;
             }
 
@@ -1010,7 +1010,7 @@
         },
         hideDataLines: function(index, callback){
             if(index === undefined){
-                if(this.options.callbacks.beforeHideDataLines.apply(this, arguments) === false) return false;
+                if(this.options.callbacks.beforeHideDataLines.apply(this, arguments) !== true) return false;
                 index = 0;
             }
             if(index >= this.options.datas.length){
@@ -1063,7 +1063,7 @@
 
             if(isAllHidden === this.options.datas.length) return false;
 
-            if(this.options.callbacks.beforeOpenPopup.apply(this, [this.popup, index, this.options.datas[index]]) === false) return false;
+            if(this.options.callbacks.beforeOpenPopup.apply(this, [index, this.popup, this.options.datas[index]]) !== true) return false;
             
             point = {
                 x: this.element[0].offsetLeft + x  - this.popup.outerWidth() / 2,
@@ -1079,10 +1079,10 @@
                     position: 'absolute'
                 });
 
-            this.options.callbacks.afterOpenPopup.apply(this, [this.popup, index, this.options.datas[index]]);
+            this.options.callbacks.afterOpenPopup.apply(this, [index, this.popup, this.options.datas[index]]);
             
             if(checkData.isFunction(callback)){
-                callback.apply(this, [this.popup, index, this.options.datas[index]]);
+                callback.apply(this, [index, this.popup, this.options.datas[index]]);
             }
         },
         closePopup: function(callback){
@@ -1090,7 +1090,7 @@
             
             var index = this.popup.data(this.options.lineIndexDataName), i;
 
-            if(this.options.callbacks.beforeClosePopup.apply(this, [this.popup, index, this.options.datas[index]]) === false) return false;
+            if(this.options.callbacks.beforeClosePopup.apply(this, [index, this.popup, this.options.datas[index]]) !== true) return false;
             this.popup
                 .hide()
                 .removeStyleCss('left')
@@ -1104,13 +1104,13 @@
                     fill: 'none'
                 });
             }
-            this.options.callbacks.afterClosePopup.apply(this, [this.popup, index, this.options.datas[index]]);
+            this.options.callbacks.afterClosePopup.apply(this, [index, this.popup, this.options.datas[index]]);
             
             if(checkData.isFunction(callback)){
-                callback.apply(this, [this.popup, index, this.options.datas[index]]);
+                callback.apply(this, [index, this.popup, this.options.datas[index]]);
             }
         },
-        update: function(data, index, callback){
+        update: function(index, data, callback){
             var self = this;
             
             if(this.options.callbacks.beforeUpdate(this, [index, this.svgDataLines[index], this.options.datas[index]]) === false) return false;
@@ -1198,6 +1198,8 @@
             this._drawAllRects();
             
             this._drawLine();
+
+            this.options.callbacks.init.apply(this, arguments);
             
             this.showRects(function(){
                 this.showLine();
@@ -1272,15 +1274,36 @@
                 callbacks: {
                     init: function(){},
                     destroy: function(){},
-                    beforeOpenPopup: function(index, popup){},
+                    beforeOpenPopup: function(index, popup){
+                        /**
+                        ** popup = this.popup
+                        ** index = this.popup.data(this.options.lineIndexDataName)
+                        **/
+                        var i, datas = this._getRectsDatas(index);
+                        this.popup
+                            .find('.cool-chart-popup-title')
+                            .html(this.options.horizontalAllLabels[index]);
+                        for(i = 0; i < datas.length; i++){
+                            this.popupItems.eq(i)
+                                .find('.item-data')
+                                .html(datas[i].value);
+                        }
+                        this.popupItems.eq(datas.length)
+                            .find('.item-data')
+                            .html(this.options.datas[this.options.datas.length - 1].value[index]);
+                        // need to return true, if return false, program will stop
+                        return true;
+                    },
                     afterOpenPopup: function(index, popup){},
-                    beforeClosePopup: function(index, popup){},
-                    afterClosePopup: function(index, popup){},
-                    beforeDrawSubRect: function(){},
-                    afterDrawSubRect: function(){},
-                    beforeDrawRect: function(){},
-                    afterDrawRect: function(){},
-                    mouseover: function(){}
+                    closePopup: function(popup){},
+                    /*beforeShowRect: function(index){
+                        return true;
+                    },
+                    afterShowRect: function(index){},
+                    beforeShowLine: function(){
+                        return true;
+                    },
+                    afterShowLine: function(){}*/
                 }
             }, options);
             
@@ -1361,20 +1384,21 @@
             }
         },
         _drawLine: function(){
-            var i, line, m = 0, tempLine = '', pathLength, x, y;
+            var i, line, m = 0, tempLine = '',
+                pathLength, x, y, lineData = this.options.datas[this.options.datas.length - 1];
             
             this.balanceLinePoints = [];
             
-            for(i = 0; i < this.options.lineData.value.length; i++){
+            for(i = 0; i < lineData.value.length; i++){
                 x = Math.ceil(this.columnsPosition[i] + this.gridWidth / 2);
                 
                 this.balanceLinePoints[i] = x;
                 
-                if(i > 0 && i < this.options.lineData.value.length - 1){
+                if(i > 0 && i < lineData.value.length - 1){
                     continue;
                 }
                 
-                y = Math.ceil(this.canvasSize.height - this.options.lineData.value[i] * this.canvasSize.height);
+                y = Math.ceil(this.canvasSize.height - lineData.value[i] * this.canvasSize.height);
                 if(i === 0){
                     tempLine = svgPathMethods.point(x - 5, y + 5, tempLine);
                 }else{
@@ -1416,7 +1440,7 @@
             for(i = 0; i < this.rects.length; i++){
                 for(m = 0; m < this.rects[i].length; m++){
                     this.rects[i][m]
-                        .unmouseout()
+                        .unmouseover()
                         .mouseover(function(){
                             if(self.isDrawing) return false;
 
@@ -1430,31 +1454,32 @@
                 .on('mouseout' + this.eventNamespace, function(){
                     self.closePopup();
                 });
-            this.items
+
+            /*this.items
                 .off('click' + this.eventNamespace)
                 .on('click' + this.eventNamespace, function(){
                     index = $(this).data(self.options.dataIndexName);
 
                     if($(this).hasClass(self.options.hiddenStatusClassName)){
                         $(this).removeClass(self.options.hiddenStatusClassName);
-                        if(index >= self.options.datas.length){
+                        if(index >= self.options.datas.length - 1){
                             self.showLine();
                         }else{
                             self.showSubRects(index);
                         }
                     }else{
                         $(this).addClass(self.options.hiddenStatusClassName);
-                        if(index >= self.options.datas.length){
+                        if(index >= self.options.datas.length - 1){
                             self.hideLine();
                         }else{
                             self.hideSubRects(index);
                         }
                     }
-                });
+                });*/
         },
         _getRectsDatas: function(index){
             var datas = [], i, basicHeight = 0, height = 0;
-            for(i = 0; i < this.options.datas.length; i++){
+            for(i = 0; i < this.options.datas.length - 1; i++){
                 height = (this.options.datas[i].value[index] * this.canvasSize.height).toNumberic(2) + this.options.gapBetweenSubRects;
                 datas[i] = {
                     value: this.options.datas[i].value[index],
@@ -1489,6 +1514,7 @@
                 y: this.canvasSize.height - datas[subRectIndex].y - datas[subRectIndex].height,
                 height: datas[subRectIndex].height
             }, this.options.drawDuration * datas[subRectIndex].value, this.options.drawEasing, function(){
+
                 self.isDrawing = false;
 
                 if(checkData.isFunction(callback)){
@@ -1503,11 +1529,16 @@
             }
             if(subRectIndex === undefined){
                 subRectIndex = 0;
+                /*if(this.options.callbacks.beforeShowRect.apply(this, [index, subRectIndex, datas]) !== true){
+                    return false;
+                }*/
             }
             if(datas === undefined){
                 datas = this._getRectsDatas(index);
             }
             if(subRectIndex === datas.length){
+                // this.options.callbacks.afterShowRect.apply(this, [index, subRectIndex, datas]);
+
                 if(checkData.isFunction(callback)){
                     callback.apply(this, isLast ? [this.options.datas[0].value.length] : [index, datas]);
                 }
@@ -1626,7 +1657,9 @@
 
             this.isDrawing = true;
             
-            this.balanceLine.animate({
+            this.balanceLine.attr({
+                'class': ''
+            }).animate({
                 'strokeDashoffset': 0
             }, 500, mina.linear, function(){
 
@@ -1643,6 +1676,7 @@
             pathLength = svgPathMethods.pathLength(this.balanceLine);
             
             this.balanceLine.attr({
+                'class': this.options.hiddenStatusClassName,
                 'strokeDasharray': pathLength,
                 'strokeDashoffset': pathLength
             });
@@ -1651,8 +1685,11 @@
                 callback.apply(this, arguments);
             }
         },
-        openPopup: function(index){
+
+        openPopup: function(index, callback){
             if(this.popup === undefined) return false;
+
+            if(this.options.callbacks.beforeOpenPopup.apply(this, [index, this.popup]) !== true) return false;
 
             var point;
 
@@ -1663,21 +1700,29 @@
             point = Snap.path.intersection(this.hoverLine, this.balanceLine);
             point = point[0];
 
-            this.pointCircle.attr({
-                opacity: 1,
-                cx: point.x,
-                cy: point.y
-            });
+            if(!this.balanceLine.hasClass(this.options.hiddenStatusClassName)){
+                this.pointCircle.attr({
+                    opacity: 1,
+                    cx: point.x,
+                    cy: point.y
+                });
+            }
 
             this.popup
                 .show()
                 .css({
                     'left': this.element[0].offsetLeft + (this.balanceLinePoints[index] - this.popup.innerWidth() / 2),
-                    'top': this.element[0].offsetTop - this.popup.innerHeight() - 10,
+                    'top': this.element[0].offsetTop - this.popup.innerHeight() - 15,
                     'position': 'absolute'
                 });
+
+            this.options.callbacks.afterOpenPopup.apply(this, [index, this.popup]);
+
+            if(checkData.isFunction(callback)){
+                callback.apply(this, [index, this.popup]);
+            }
         },
-        closePopup: function(){
+        closePopup: function(callback){
             if(this.popup === undefined) return false;
 
             this.popup
@@ -1688,8 +1733,16 @@
             this.pointCircle.attr({
                 'opacity': 0
             });
+
+            this.options.callbacks.closePopup.apply(this, arguments);
+
+            if(checkData.isFunction(callback)){
+                callback.apply(this, [this.popup]);
+            }
         },
-        update: function(){},
+        update: function(index, datas, type, callback){
+            //
+        },
         destroy: function($super){
             $super();
 
