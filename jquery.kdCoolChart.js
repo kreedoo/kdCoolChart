@@ -1198,14 +1198,14 @@
             this._drawAllRects();
             
             this._drawLine();
+            
+            this._triggerFunction();
 
             this.options.callbacks.init.apply(this, arguments);
             
             this.showRects(function(){
                 this.showLine();
             });
-            
-            this._triggerFunction();
         },
         _setOptions: function(options){
             this.options = $.extend(true, {
@@ -1296,6 +1296,8 @@
                     },
                     afterOpenPopup: function(index, popup){},
                     closePopup: function(popup){},
+                    beforeUpdate: function(){},
+                    afterUpdate: function(){}
                     /*beforeShowRect: function(index){
                         return true;
                     },
@@ -1385,7 +1387,10 @@
         },
         _drawLine: function(){
             var i, line, m = 0, tempLine = '',
-                pathLength, x, y, lineData = this.options.datas[this.options.datas.length - 1];
+                pathLength, x, y, lineData = this.options.datas[this.options.datas.length - 1],
+                g = this.snap.paper.g().attr({
+                    'class': 'cool-chart-line'
+                });
             
             this.balanceLinePoints = [];
             
@@ -1412,7 +1417,6 @@
                 });
             }else{
                 line = this.snap.path(tempLine).attr(this.options.style.defaultDataLine).attr({
-                    class: 'cool-chart-line',
                     'stroke': '#FF5969'
                 });
             }
@@ -1433,6 +1437,8 @@
                 'stroke': 'none',
                 'strokeWidth': 1
             });
+
+            g.add(this.balanceLine, this.pointCircle, this.hoverLine);
         },
         _triggerFunction: function(){
             var self = this, index, i, m, point;
@@ -1740,8 +1746,29 @@
                 callback.apply(this, [this.popup]);
             }
         },
-        update: function(index, datas, type, callback){
-            //
+        update: function(datas, callback){
+            var self = this;
+
+            if(this.options.callbacks.beforeUpdate(this, arguments) === false) return false;
+
+            this.options.datas = datas;
+
+            this.element.find('.cool-chart-rect-group,.cool-chart-line').remove();
+
+            this._drawAllRects();
+            this._drawLine();
+
+            this._triggerFunction();
+            
+            this.showRects(function(){
+                this.showLine(function(){
+                    self.options.callbacks.afterUpdate(self, arguments);
+
+                    if(checkData.isFunction(callback)){
+                        callback.apply(self, arguments);
+                    }
+                });
+            });
         },
         destroy: function($super){
             $super();
