@@ -116,7 +116,7 @@
             margin-top: -10px;
         }
         .cool-chart-line-data-item.is-hide .cool-chart-data-mark {
-            background-color: transparent;
+            background-color: transparent !important;
         }
         .cool-chart-line-data-item.is-hide .cool-chart-data-mark:before {
             display: none;
