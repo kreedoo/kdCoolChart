@@ -136,11 +136,17 @@
         },
         _setOptions: function($super, options){
             this.options = $.extend(true, {
-                size: 200,
+                size: function(){
+                    return this.type === 'full-pie' ? 120 : 200;
+                },
                 drawDuration: 2000,
                 drawEasing: mina.bounce,
-                strokeWidth: 20, // for full-pie and half-pie
-                strokeWidthHover: 30, // for full-pie and half-pie
+                strokeWidth: function(){
+                    return this.type === 'full-pie' ? 10 : 15;
+                }, // for full-pie and half-pie
+                strokeWidthHover: function(){
+                    return this.type === 'full-pie' ? 15 : 20;
+                }, // for full-pie and half-pie
                 gapBetweenArcs: 1, // for full-pie and half-pie
                 startDegree: function(){
                     return this.type === 'half-pie' ? -130 : 0;
@@ -176,7 +182,18 @@
                     beforeMouseout: function(index, arc, data){},
                     afterMouseout: function(index, arc, data){}
                 },
-            }, options);
+            }, options, (function(element){
+                var dataLinks = {},
+                    mark = element.data('coolChartLinksMark'),
+                    items = element.data('coolChartLinksItems');
+                if(mark !== undefined){
+                    dataLinks.mark = mark;
+                }
+                if(items !== undefined){
+                    dataLinks.items = items;
+                }
+                return {links: dataLinks};
+            }(this.element)));
             
             if(this.options.datas === undefined || this.options.datas.length === 0){
                 return false;
@@ -680,7 +697,26 @@
                     },
                     afterUpdate: function(){}
                 }
-            }, options);
+            }, options, (function(element){
+                var dataLinks = {},
+                    mark = element.data('coolChartLinksMark'),
+                    items = element.data('coolChartLinksItems'),
+                    popup = element.data('coolChartLinksPopup'),
+                    popupItems = element.data('coolChartLinksPopupItems');
+                if(mark !== undefined){
+                    dataLinks.mark = mark;
+                }
+                if(items !== undefined){
+                    dataLinks.items = items;
+                }
+                if(popup !== undefined){
+                    dataLinks.popup = popup;
+                }
+                if(popupItems !== undefined){
+                    dataLinks.popupItems = popupItems;
+                }
+                return {links: dataLinks};
+            }(this.element)));
             
             if(this.options.datas === undefined || this.options.datas.length === 0){
                 return false;
@@ -888,41 +924,43 @@
             var self = this;
 
             // toggle lines
-            this.items
-                .off('click' + this.eventNamespace)
-                .on('click' + this.eventNamespace, function(){
-                    if(self.isDrawing) return false;
+            if(this.items !== undefined){
+                this.items
+                    .off('click' + this.eventNamespace)
+                    .on('click' + this.eventNamespace, function(){
+                        if(self.isDrawing) return false;
 
-                    var index = $(this).data(self.options.dataIndexName);
+                        var index = $(this).data(self.options.dataIndexName);
 
-                    if($(this).hasClass(self.options.hiddenStatusClassName)){
-                        if(self.options.callbacks.beforeShowDataLine.apply(self, [index]) !== true) return false;
+                        if($(this).hasClass(self.options.hiddenStatusClassName)){
+                            if(self.options.callbacks.beforeShowDataLine.apply(self, [index]) !== true) return false;
 
-                        $(this).removeClass(self.options.hiddenStatusClassName);
+                            $(this).removeClass(self.options.hiddenStatusClassName);
 
-                        self.showDataLine(index);
-                        self.svgDataLines[index].removeClass(self.options.hiddenStatusClassName);
+                            self.showDataLine(index);
+                            self.svgDataLines[index].removeClass(self.options.hiddenStatusClassName);
 
-                        if(self.popupItems !== undefined){
-                            self.popupItems.eq(index).removeClass(self.options.hiddenStatusClassName);
+                            if(self.popupItems !== undefined){
+                                self.popupItems.eq(index).removeClass(self.options.hiddenStatusClassName);
+                            }
+
+                            self.options.callbacks.afterShowDataLine.apply(self, [index]);
+                        }else{
+                            if(self.options.callbacks.beforeHideDataLine.apply(self, [index]) !== true) return false;
+
+                            $(this).addClass(self.options.hiddenStatusClassName);
+
+                            self.hideDataLine(index);
+                            self.svgDataLines[index].addClass(self.options.hiddenStatusClassName);
+                            
+                            if(self.popupItems !== undefined){
+                                self.popupItems.eq(index).addClass(self.options.hiddenStatusClassName);
+                            }
+
+                            self.options.callbacks.afterHideDataLine.apply(self, [index]);
                         }
-
-                        self.options.callbacks.afterShowDataLine.apply(self, [index]);
-                    }else{
-                        if(self.options.callbacks.beforeHideDataLine.apply(self, [index]) !== true) return false;
-
-                        $(this).addClass(self.options.hiddenStatusClassName);
-
-                        self.hideDataLine(index);
-                        self.svgDataLines[index].addClass(self.options.hiddenStatusClassName);
-                        
-                        if(self.popupItems !== undefined){
-                            self.popupItems.eq(index).addClass(self.options.hiddenStatusClassName);
-                        }
-
-                        self.options.callbacks.afterHideDataLine.apply(self, [index]);
-                    }
-                });
+                    });
+            }
 
             // mouse move and show popup, axis, cross points
             this.element
@@ -1083,8 +1121,8 @@
             if(this.options.callbacks.beforeOpenPopup.apply(this, [index, this.popup, this.options.datas[index]]) !== true) return false;
             
             point = {
-                x: this.element[0].offsetLeft + x  - this.popup.outerWidth() / 2,
-                y: this.element[0].offsetTop + maxPos - this.popup.outerHeight() - 20
+                x: this.element.offset().left + x  - this.popup.outerWidth() / 2,
+                y: this.element.offset().top + maxPos - this.popup.outerHeight() - 20
             };
 
             this.popup
@@ -1298,8 +1336,8 @@
                         **/
                         var i, datas = this._getRectsDatas(index);
                         this.popup
-                            .find('.cool-chart-popup-title')
-                            .html(this.options.horizontalAllLabels[index]);
+                            .find('.cool-chart-popup-value')
+                            .html('$1,726 - ' + this.options.horizontalAllLabels[index]);
                         for(i = 0; i < datas.length; i++){
                             this.popupItems.eq(i)
                                 .find('.item-data')
@@ -1324,7 +1362,26 @@
                     },
                     afterShowLine: function(){}*/
                 }
-            }, options);
+            }, options, (function(element){
+                var dataLinks = {},
+                    mark = element.data('coolChartLinksMark'),
+                    items = element.data('coolChartLinksItems'),
+                    popup = element.data('coolChartLinksPopup'),
+                    popupItems = element.data('coolChartLinksPopupItems');
+                if(mark !== undefined){
+                    dataLinks.mark = mark;
+                }
+                if(items !== undefined){
+                    dataLinks.items = items;
+                }
+                if(popup !== undefined){
+                    dataLinks.popup = popup;
+                }
+                if(popupItems !== undefined){
+                    dataLinks.popupItems = popupItems;
+                }
+                return {links: dataLinks};
+            }(this.element)));
             
             if(this.options.datas === undefined || this.options.datas.length === 0){
                 return false;

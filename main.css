@@ -67,7 +67,7 @@
         width: 12px;
         font-size: 0;
         border-radius: 50%;
-        background-color: #333;
+        /*background-color: #333;*/
     }
     /**
     ** extend .cool-chart-full-pie-data-mark **/
