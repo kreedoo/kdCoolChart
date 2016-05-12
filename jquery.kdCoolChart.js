@@ -84,6 +84,11 @@
         }
     };
 
+    var isMSIE = (function(){
+        var ua = window.navigator.userAgent.toLowerCase();
+        return (/(msie|trident)/).test(ua);
+    }());
+
     var Chart = Class({
         init: function(element, options){
             this.element = $(element);
@@ -108,6 +113,12 @@
                 this.element.removeAttr('id');
             }
             this.element.removeData('kdCoolChart');
+        },
+        _createShadow: function(x, y, blur, color, opacity){
+            if(opacity === undefined) opacity = 1;
+            var sc = Snap.color(color);
+            var c = 'rgba(' + sc.r + ', ' + sc.g + ', ' + sc.b + ', ' + opacity + ')';
+            return this.snap.paper.filter(Snap.filter.shadow(x, y, blur, c));
         }
     });
 
@@ -284,7 +295,7 @@
             return [previousDegree, degree];
         },
         _drawArc: function(index, callback){
-            var shadow = this.snap.paper.filter(Snap.filter.shadow(0, 2, 5, '#CAD5EB')),
+            var shadow = this._createShadow(0, 2, 5, this.options.datas[index].color, 0.26),
                 path,
                 arcPaths = [],
                 pathLength = 0;
@@ -300,7 +311,7 @@
                     class: 'cool-chart-arc cool-chart-arc-' + index,
                     fill: 'none',
                     strokeWidth: this.options.strokeWidth,
-                    filter: shadow
+                    filter: isMSIE ? 'none' : shadow
                 }).data('index', index);
             }
             path.attr({
@@ -895,7 +906,8 @@
             if(index >= this.options.datas.length) return false;
 
             var dataLinePoints = this.dataLinesPoints[index],
-                line, tempLine = '', i, self = this, pathLength;
+                line, tempLine = '', i, self = this, pathLength,
+                shadow = this._createShadow(0, 2, 5, this.options.datas[index].color, 0.26);
 
             for(i = 0; i < dataLinePoints.length; i++){
                 tempLine = svgPathMethods.point(dataLinePoints[i].x, dataLinePoints[i].y, tempLine);
@@ -907,7 +919,8 @@
                 });
             }else{
                 line = this.snap.path(tempLine).attr(this.options.style.defaultDataLine).attr({
-                    'stroke': this.options.datas[index].color
+                    'stroke': this.options.datas[index].color,
+                    filter: isMSIE ? 'none' : shadow
                 });
             }
             this.svgDataLines[index] = line;
@@ -1441,7 +1454,7 @@
             }
         },        
         _drawAllRects: function(){
-            var i, m, datas, g;
+            var i, m, datas, g, shadows = [];
             
             this.rects = [];
             
@@ -1450,9 +1463,13 @@
                 this.rects[i] = [];
                 g = this.snap.paper.g().attr({class: 'cool-chart-rect-group cool-chart-rect-group-' + i}).data('index', i);
                 for(m = 0; m < datas.length; m++){
+                    if(shadows[m] !== undefined){
+                        shadows[m] = this._createShadow(0, 2, 5, datas[m].color, 0.26);
+                    }
                     this.rects[i][m] = this.snap.rect(datas[m].x, (this.canvasSize.height - datas[m].y), datas[m].width, 0).attr(this.options.style.rect).attr({
                         class: 'cool-chart-rect cool-chart-rect-' + i + '-' + m,
-                        fill: datas[m].color
+                        fill: datas[m].color,
+                        filter: isMSIE ? 'none' : shadows[m]
                     }).data('index', i).data('subRectIndex', m);
                     
                     g.add(this.rects[i][m]);
@@ -1464,7 +1481,8 @@
                 pathLength, x, y, lineData = this.options.datas[this.options.datas.length - 1],
                 g = this.snap.paper.g().attr({
                     'class': 'cool-chart-line'
-                });
+                }),
+                shadow = this._createShadow(0, 2, 5, lineData.color, 0.26);
             
             this.balanceLinePoints = [];
             
@@ -1491,7 +1509,8 @@
                 });
             }else{
                 line = this.snap.path(tempLine).attr(this.options.style.defaultDataLine).attr({
-                    'stroke': '#FF5969'
+                    'stroke': lineData.color,
+                    filter: isMSIE ? 'none' : shadow
                 });
             }
             
@@ -1504,7 +1523,8 @@
             this.balanceLine = line;
             
             this.pointCircle = this.snap.circle(0,0,4).attr(this.options.style.pointCircle).attr({
-                'opacity': 0
+                'opacity': 0,
+                filter: isMSIE ? 'none' : shadow
             });
             this.hoverLine = this.snap.path(svgPathMethods.points([[0,0],[0,this.canvasSize.height]])).attr({
                 'fill': 'none',
